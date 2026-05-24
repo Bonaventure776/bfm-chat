@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BFM Chat</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ================================================================
+     AUTH SCREEN - Login and Register
+================================================================ -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-blob blob-1"></div>
+  <div class="auth-blob blob-2"></div>
+  <div class="auth-blob blob-3"></div>
+
+  <div class="auth-card">
+    <!-- Brand -->
+    <div class="auth-brand">
+      <div class="brand-icon"><i class="fa-brands fa-whatsapp"></i></div>
+      <h1 class="brand-name">BFM <span>Chat</span></h1>
+      <p class="brand-tagline">Simple. Fast. Private.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button id="tab-login-btn"    class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button id="tab-register-btn" class="auth-tab"        onclick="switchAuthTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login" class="auth-form shown">
+      <div class="field-wrap">
+        <i class="fa-solid fa-user field-icon"></i>
+        <input type="text"     id="l-username" placeholder="Username"  autocomplete="off" />
+      </div>
+      <div class="field-wrap">
+        <i class="fa-solid fa-lock field-icon"></i>
+        <input type="password" id="l-password" placeholder="Password" />
+      </div>
+      <p id="login-err" class="form-error"></p>
+      <button class="btn-auth" onclick="doLogin()">
+        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+      </button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="form-register" class="auth-form">
+      <div class="field-wrap">
+        <i class="fa-solid fa-user field-icon"></i>
+        <input type="text"     id="r-username" placeholder="Choose username"  autocomplete="off" />
+      </div>
+      <div class="field-wrap">
+        <i class="fa-solid fa-lock field-icon"></i>
+        <input type="password" id="r-password" placeholder="Create password" />
+      </div>
+      <div class="field-wrap">
+        <i class="fa-solid fa-image field-icon"></i>
+        <input type="text"     id="r-avatar"   placeholder="Avatar URL (optional)" />
+      </div>
+      <p id="reg-err" class="form-error"></p>
+      <button class="btn-auth" onclick="doRegister()">
+        <i class="fa-solid fa-user-plus"></i> Create Account
+      </button>
+    </div>
+
+    <p class="auth-demo-hint">Demo: <strong>alex</strong> / <strong>1234</strong></p>
+  </div>
+</div>
+
+
+<!-- ================================================================
+     MAIN APP - WhatsApp-style layout
+================================================================ -->
+<div id="app" class="app hidden">
+
+  <!-- ============================================================
+       LEFT SIDEBAR
+  ============================================================ -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- User profile bar at top -->
+    <div class="sidebar-topbar">
+      <div class="sb-profile" onclick="openSelfProfile()">
+        <div class="sb-avatar-wrap">
+          <img id="sb-avatar" src="" alt="me" class="sb-avatar" />
+          <span class="sb-online-dot"></span>
+        </div>
+        <span id="sb-username" class="sb-username"></span>
+      </div>
+      <div class="sb-topbar-actions">
+        <button class="icon-btn" title="Settings" onclick="showSettings()">
+          <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search contacts -->
+    <div class="sb-search-wrap">
+      <i class="fa-solid fa-magnifying-glass sb-search-icon"></i>
+      <input type="text" id="contact-search"
+             placeholder="Search or start new chat"
+             oninput="filterContacts(this.value)" />
+    </div>
+
+    <!-- Contact list -->
+    <div class="contact-list" id="contact-list">
+      <!-- Rendered by JS -->
+    </div>
+
+  </aside>
+
+  <!-- ============================================================
+       RIGHT: CHAT PANEL
+  ============================================================ -->
+  <main class="chat-panel" id="chat-panel">
+
+    <!-- Empty state: no chat open -->
+    <div class="chat-empty" id="chat-empty">
+      <div class="chat-empty-inner">
+        <div class="empty-icon"><i class="fa-brands fa-whatsapp"></i></div>
+        <h2>BFM Chat</h2>
+        <p>Select a contact to start messaging</p>
+        <span class="encrypted-note">
+          <i class="fa-solid fa-lock"></i> End-to-end encrypted
+        </span>
+      </div>
+    </div>
+
+    <!-- Active conversation -->
+    <div class="conversation hidden" id="conversation">
+
+      <!-- Top bar with contact info -->
+      <div class="chat-topbar">
+        <button class="back-btn mobile-only" onclick="closeConversation()">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div class="chat-contact-info" onclick="openContactProfile()">
+          <img id="ct-avatar" src="" alt="" class="ct-avatar" />
+          <div>
+            <div id="ct-name"   class="ct-name"></div>
+            <div id="ct-status" class="ct-status">online</div>
+          </div>
+        </div>
+        <div class="chat-topbar-right">
+          <button class="icon-btn" onclick="toggleChatSearch()" title="Search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+          <button class="icon-btn" onclick="showSettings()" title="Options">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- In-chat search bar -->
+      <div class="chat-search-bar hidden" id="chat-search-bar">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="chat-search-input"
+               placeholder="Search in conversation..."
+               oninput="searchInChat(this.value)" />
+        <button onclick="toggleChatSearch()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Messages -->
+      <div class="messages-wrap" id="messages-wrap">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Typing indicator -->
+      <div class="typing-row hidden" id="typing-row">
+        <div class="typing-bubble">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="typing-label" id="typing-label">typing...</span>
+      </div>
+
+      <!-- Input bar -->
+      <div class="input-area">
+        <button class="input-icon-btn" onclick="toggleEmoji()" title="Emoji">
+          <i class="fa-regular fa-face-smile"></i>
+        </button>
+
+        <!-- Attach photo or video -->
+        <label class="input-icon-btn" title="Attach media">
+          <i class="fa-solid fa-paperclip"></i>
+          <input type="file" id="media-input"
+                 accept="image/*,video/*"
+                 style="display:none"
+                 onchange="handleMediaUpload(event)" />
+        </label>
+
+        <input type="text" id="msg-input" class="msg-input"
+               placeholder="Type a message"
+               onkeydown="onInputKey(event)"
+               oninput="onInputChange()" />
+
+        <button class="btn-send" id="btn-send" onclick="sendMessage()">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+
+      <!-- Emoji picker -->
+      <div class="emoji-panel hidden" id="emoji-panel">
+        <!-- Rendered by JS -->
+      </div>
+
+    </div><!-- end .conversation -->
+  </main>
+
+</div><!-- end #app -->
+
+
+<!-- ================================================================
+     SETTINGS PANEL (slides over sidebar)
+================================================================ -->
+<div class="settings-panel hidden" id="settings-panel">
+  <div class="settings-header">
+    <button class="icon-btn" onclick="hideSettings()">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <h2>Settings</h2>
+  </div>
+
+  <div class="settings-avatar-section">
+    <div class="settings-avatar-wrap">
+      <img id="set-avatar-img" src="" alt="" class="settings-avatar-img" />
+      <label class="avatar-edit-btn" title="Change photo">
+        <i class="fa-solid fa-camera"></i>
+        <input type="file" id="set-avatar-file" accept="image/*"
+               style="display:none" onchange="handleAvatarChange(event)" />
+      </label>
+    </div>
+    <p class="tap-hint">Tap to change profile photo</p>
+  </div>
+
+  <div class="settings-body">
+
+    <div class="settings-section">
+      <div class="settings-section-title">Profile</div>
+
+      <div class="settings-row">
+        <i class="fa-solid fa-user row-icon"></i>
+        <div class="settings-row-content">
+          <label>Username</label>
+          <div class="settings-row-edit">
+            <input type="text" id="set-username" placeholder="New username" />
+            <button onclick="saveUsername()"><i class="fa-solid fa-check"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <i class="fa-solid fa-link row-icon"></i>
+        <div class="settings-row-content">
+          <label>Avatar URL</label>
+          <div class="settings-row-edit">
+            <input type="text" id="set-avatar-url" placeholder="Paste URL" />
+            <button onclick="saveAvatarUrl()"><i class="fa-solid fa-check"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Preferences</div>
+
+      <div class="settings-row toggle-row">
+        <i class="fa-solid fa-bell row-icon"></i>
+        <div class="settings-row-content">
+          <label>Notification Sounds</label>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="sound-toggle" checked onchange="toggleSound(this)" />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+      </div>
+
+      <div class="settings-row toggle-row">
+        <i class="fa-solid fa-moon row-icon"></i>
+        <div class="settings-row-content">
+          <label>Dark Mode</label>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="dark-toggle" checked onchange="toggleTheme(this)" />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Danger Zone</div>
+
+      <button class="settings-danger-btn" onclick="clearActiveChat()">
+        <i class="fa-solid fa-trash"></i> Clear Chat History
+      </button>
+
+      <button class="settings-danger-btn logout" onclick="doLogout()">
+        <i class="fa-solid fa-right-from-bracket"></i> Log Out
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ================================================================
+     PROFILE MODAL POPUP
+================================================================ -->
+<div class="modal-overlay hidden" id="profile-overlay" onclick="handleOverlayClick(event)">
+  <div class="profile-modal" id="profile-modal">
+    <div class="profile-modal-banner" id="pm-banner"></div>
+    <button class="modal-close" onclick="closeProfileModal()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="profile-modal-body">
+      <img id="pm-avatar"   src="" alt="" class="pm-avatar" />
+      <h3 id="pm-name"     class="pm-name"></h3>
+      <div id="pm-online"  class="pm-online-status">
+        <span class="dot-green"></span> Online
+      </div>
+      <div class="pm-stats">
+        <div class="pm-stat">
+          <strong id="pm-msg-count">0</strong>
+          <span>Messages</span>
+        </div>
+        <div class="pm-stat-divider"></div>
+        <div class="pm-stat">
+          <strong id="pm-joined">Today</strong>
+          <span>Joined</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ================================================================
+     MEDIA LIGHTBOX (full-screen preview for images & videos)
+================================================================ -->
+<div class="lightbox hidden" id="lightbox" onclick="handleLightboxClick(event)">
+  <div class="lightbox-content" id="lightbox-content">
+    <!-- Image or video rendered here by JS -->
+  </div>
+  <button class="lightbox-close-btn" onclick="closeLightbox()">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+  <a id="lightbox-download" class="lightbox-download-btn" download title="Download">
+    <i class="fa-solid fa-download"></i>
+  </a>
+</div>
+
+
+<!-- Toast notification -->
+<div class="toast hidden" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
